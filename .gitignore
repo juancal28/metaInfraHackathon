@@ -1,0 +1,10 @@
+# dataset and organizer files come from the kit
+dataset/
+*.db
+instructions.pdf
+findings-template.json
+berkeley_hackathon_validate.py
+
+__pycache__/
+.DS_Store
+*.tmp

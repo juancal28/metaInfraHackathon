@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bearcorp Threat Hunt</title>
+<style>
+:root{
+  --bg:#f4f5f7;--panel:#fff;--panel2:#f9fafb;--border:#e3e6eb;--text:#1b1f24;--muted:#5d6672;--faint:#8a929c;
+  --accent:#2f5bea;--accent-soft:#e8eefd;--danger:#c4302b;--ok:#1a7f37;--warn:#b26b00;--sel:#fff7d6;
+  --c-kbi:#7c3aed;--c-dec:#db2777;--c-dt:#dc2626;--c-c2:#ea580c;--c-rec:#0891b2;--c-mal:#9333ea;--c-his:#b45309;--c-lat:#2563eb;--c-cred:#059669;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0f1216;--panel:#161a20;--panel2:#1b2027;--border:#2a3038;--text:#e6e9ee;--muted:#9aa4b0;--faint:#6b7480;
+  --accent:#6b8cff;--accent-soft:#1d2a4d;--danger:#f0625d;--ok:#3fb950;--warn:#d29922;--sel:#3a3418;}}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column}
+button,input,textarea{font:inherit;color:inherit}
+header{display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--border)}
+header h1{font-size:16px;margin:0;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+.logo{width:20px;height:20px;border-radius:5px;background:linear-gradient(135deg,#c4302b,#ea580c)}
+.sp{flex:1}
+.pill{background:var(--panel2);border:1px solid var(--border);border-radius:999px;padding:3px 10px;color:var(--muted);font-size:12px;white-space:nowrap}
+.btn{border:1px solid var(--border);background:var(--panel);border-radius:7px;padding:6px 12px;cursor:pointer}
+.btn:hover{border-color:var(--faint)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.btn:disabled{opacity:.5;cursor:default}
+.team{display:flex;align-items:center;gap:6px;color:var(--muted)}
+.team input{width:70px;padding:5px 8px;border:1px solid var(--border);border-radius:7px;background:var(--panel2)}
+.cats{display:flex;gap:6px;flex-wrap:wrap;padding:8px 16px;background:var(--panel);border-bottom:1px solid var(--border)}
+.cat{display:flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;border:1px solid var(--border);cursor:pointer;background:var(--panel2);font-size:12px}
+.cat.on{outline:2px solid var(--accent)}
+.cat b{font-variant-numeric:tabular-nums}
+.dot{width:9px;height:9px;border-radius:50%;flex:none}
+main{flex:1;display:flex;min-height:0}
+nav{width:270px;flex:none;overflow:auto;background:var(--panel);border-right:1px solid var(--border);padding:8px}
+nav h4{margin:12px 8px 4px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint)}
+.h{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:7px;cursor:pointer}
+.h:hover{background:var(--panel2)}
+.h.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.h .n{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--muted);font-size:12px}
+.h .id{font-family:var(--mono);font-size:11px;color:var(--faint);width:34px}
+.spin{width:10px;height:10px;border:2px solid var(--accent);border-right-color:transparent;border-radius:50%;animation:s .7s linear infinite;display:inline-block}
+@keyframes s{to{transform:rotate(360deg)}}
+section#main{flex:1;min-width:0;overflow:auto;padding:16px 20px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.card h2{margin:0 0 4px;font-size:18px;letter-spacing:-.01em}
+.meta{color:var(--muted)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:600;color:#fff;white-space:nowrap}
+.form{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px 16px;margin-top:10px}
+.form label{display:flex;flex-direction:column;gap:3px;color:var(--muted);font-size:12px}
+.form input,.form textarea{border:1px solid var(--border);border-radius:7px;padding:6px 8px;background:var(--panel2);color:var(--text)}
+.form textarea{min-height:56px;font-family:var(--mono);font-size:11.5px;resize:vertical}
+.form .changed{border-color:var(--warn);box-shadow:0 0 0 2px color-mix(in srgb,var(--warn) 25%,transparent)}
+.row{display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap}
+details summary{cursor:pointer;color:var(--accent);margin-top:10px}
+pre{font-family:var(--mono);font-size:11.5px;background:var(--panel2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;white-space:pre-wrap;margin:6px 0 0}
+.tools{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.tools input{flex:1;max-width:360px;padding:6px 9px;border:1px solid var(--border);border-radius:7px;background:var(--panel)}
+table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+th{text-align:left;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:7px 8px;background:var(--panel2);border-bottom:1px solid var(--border);cursor:pointer;user-select:none;position:sticky;top:0}
+td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:top}
+tr.f{cursor:pointer}
+tr.f:hover td{background:var(--panel2)}
+tr.f.sel td{background:var(--sel)}
+tr.f.off td{opacity:.45;text-decoration:line-through}
+td.mono{font-family:var(--mono);font-size:12px;white-space:nowrap}
+td.ev{color:var(--muted);max-width:520px}
+.diff{font-size:12px;margin-left:6px}
+.diff .plus{color:var(--ok)}.diff .minus{color:var(--danger)}
+aside{width:470px;flex:none;overflow:auto;background:var(--panel);border-left:1px solid var(--border);padding:14px 16px;display:none}
+aside.open{display:block}
+aside h3{margin:16px 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint)}
+.kv{display:grid;grid-template-columns:90px 1fr;gap:3px 10px}
+.kv div:nth-child(odd){color:var(--muted)}
+.guide{background:var(--accent-soft);border-radius:8px;padding:8px 10px}
+.tl{font-family:var(--mono);font-size:11px}
+.tl div{display:grid;grid-template-columns:62px 92px 1fr;gap:6px;padding:2px 4px;border-radius:4px}
+.tl div.hit{background:var(--sel);font-weight:700}
+.tl .ev{color:var(--muted)}
+.empty{color:var(--faint);padding:30px;text-align:center}
+.x{float:right;border:0;background:none;font-size:18px;cursor:pointer;color:var(--muted)}
+.err{color:var(--danger);margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <h1><span class="logo"></span>Bearcorp Threat Hunt</h1>
+  <span class="pill" id="dbinfo">loading…</span>
+  <span class="pill" id="status"></span>
+  <span class="sp"></span>
+  <span class="team">team_id <input id="team" value="12"></span>
+  <span class="pill" id="total">0 findings</span>
+  <button class="btn primary" id="export">Export findings.json</button>
+</header>
+<div class="cats" id="cats"></div>
+<main>
+  <nav id="nav"></nav>
+  <section id="main"></section>
+  <aside id="side"></aside>
+</main>
+<script>
+const CAT_COLOR = {'Known-bad indicators':'--c-kbi','Deceptive domains':'--c-dec','Data theft':'--c-dt','Command and control':'--c-c2',
+  'Reconnaissance':'--c-rec','Malware delivery':'--c-mal','Host intrusion signs':'--c-his','Lateral movement':'--c-lat','Credential abuse':'--c-cred'};
+const S = {hunts:[], sel:'ALL', findings:{}, all:[], catFilter:null, text:'', sort:{k:'timestamp',d:1}, picked:null, triage:{}, lastCounts:{},
+  excluded:new Set(JSON.parse(safeGet('excluded')||'[]'))};
+function safeGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function safeSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const keyOf = f => `${f.hunt}|${f.category}|${f.host}|${f.timestamp}`;
+const chip = c => `<span class="chip" style="background:var(${CAT_COLOR[c]||'--faint'})">${esc(c)}</span>`;
+const api = async (p, body) => { const r = await fetch(p, body ? {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)} : {}); const j = await r.json(); if (!r.ok) throw new Error(j.error || r.status); return j; };
+
+async function loadHunts(){
+  const j = await api('/api/hunts');
+  S.hunts = j.hunts; S.triage = j.triage;
+  $('#dbinfo').textContent = 'database: ' + j.db;
+  const pending = S.hunts.filter(h => h.count === null).length;
+  $('#status').innerHTML = j.busy ? `<span class="spin"></span> running ${esc(j.busy)}${pending ? ` · ${pending} hunts still loading` : ''}` : 'all hunts loaded';
+  for (const h of S.hunts) S.lastCounts[h.id] ??= h.count;
+  await loadAll();
+  drawNav(); drawCats();
+  if (!S.mainDrawn) { drawMain(); S.mainDrawn = true; }
+  else if (S.sel === 'ALL') drawTable();
+  return pending || j.busy;
+}
+async function loadAll(){ S.all = (await api('/api/findings')).findings; $('#total').textContent = `${S.all.filter(f=>!S.excluded.has(keyOf(f))).length} findings to export`; }
+
+function drawNav(){
+  const roles = [...new Set(S.hunts.map(h => h.role))];
+  $('#nav').innerHTML = `<div class="h ${S.sel==='ALL'?'on':''}" data-id="ALL"><span class="id">all</span>All findings<span class="n">${S.all.length}</span></div>` +
+    roles.map(r => `<h4>${esc(r)}</h4>` + S.hunts.filter(h => h.role===r).map(h =>
+      `<div class="h ${S.sel===h.id?'on':''}" data-id="${h.id}"><span class="id">${h.id}</span>${esc(h.title)}<span class="n">${h.count===null?'<span class="spin"></span>':h.count}</span></div>`).join('')).join('');
+}
+$('#nav').addEventListener('click', e => { const d = e.target.closest('.h'); if (!d) return; S.sel = d.dataset.id; S.picked = null; $('#side').classList.remove('open'); drawNav(); drawMain(); });
+
+function drawCats(){
+  const c = {}; for (const f of S.all) c[f.category] = (c[f.category]||0) + 1;
+  $('#cats').innerHTML = Object.keys(CAT_COLOR).map(k => `<span class="cat ${S.catFilter===k?'on':''}" data-c="${esc(k)}"><span class="dot" style="background:var(${CAT_COLOR[k]})"></span>${esc(k)} <b>${c[k]||0}</b></span>`).join('') +
+    (S.catFilter ? `<span class="cat" data-c="">clear filter ✕</span>` : '');
+}
+$('#cats').addEventListener('click', e => { const d = e.target.closest('.cat'); if (!d) return; S.catFilter = d.dataset.c || null; drawCats(); drawTable(); });
+
+function currentHunt(){ return S.hunts.find(h => h.id === S.sel); }
+
+async function drawMain(){
+  const h = currentHunt();
+  if (!h) {
+    $('#main').innerHTML = `<div class="card"><h2>All findings</h2><div class="meta">Every detection's current results, merged and de-duplicated. Click a row to triage it, or untick it to leave it out of the export. Pick a hunt on the left to change its settings.</div></div>` + tableShell();
+    drawTable(); return;
+  }
+  const fields = Object.entries(h.params).map(([k, p]) => {
+    const v = h.current[k], dv = p.default, changed = JSON.stringify(v) !== JSON.stringify(dv);
+    const val = Array.isArray(v) ? v.join(', ') : v;
+    const input = p.type === 'list' ? `<textarea data-k="${k}" class="${changed?'changed':''}">${esc(val)}</textarea>`
+      : `<input data-k="${k}" type="${p.type==='str'?'text':'number'}" step="${p.type==='float'?'0.05':'1'}" value="${esc(val)}" class="${changed?'changed':''}">`;
+    return `<label>${esc(p.label||k)}${input}</label>`;
+  }).join('');
+  $('#main').innerHTML = `<div class="card">
+      <div class="meta">${esc(h.role)} · <span style="font-family:var(--mono)">${h.id}</span></div>
+      <h2>${esc(h.title)}</h2>
+      <div class="chips">${h.categories.map(chip).join('')}</div>
+      <div>${esc(h.describe)}</div>
+      <div class="form" id="form">${fields}</div>
+      <div class="row"><button class="btn primary" id="run">Run detection</button><button class="btn" id="reset">Reset to defaults</button>
+        <span class="meta" id="runmeta">${h.ran_at ? `last run ${h.ran_at} · ${h.secs}s` : 'running…'}</span><span class="diff" id="diff"></span></div>
+      <div class="err" id="err"></div>
+      <details><summary>Detection SQL</summary><pre>${esc(h.sql)}</pre></details>
+    </div>` + tableShell();
+  $('#run').onclick = () => run(false); $('#reset').onclick = () => run(true);
+  $('#form').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT') run(false); });
+  $('#form').addEventListener('input', e => { const k = e.target.dataset.k; if (!k) return; const p = h.params[k];
+    const dv = Array.isArray(p.default) ? p.default.join(', ') : String(p.default); e.target.classList.toggle('changed', e.target.value.trim() !== dv); });
+  const j = await api('/api/findings?hunt=' + h.id); S.findings[h.id] = j.findings; drawTable();
+}
+function tableShell(){
+  return `<div class="tools"><input id="q" placeholder="Search host, user, process or evidence" value="${esc(S.text)}"><span class="meta" id="shown"></span>
+    <span class="sp"></span><button class="btn" id="allon">Include all</button></div><div id="tbl"></div>`;
+}
+document.addEventListener('input', e => { if (e.target.id === 'q') { S.text = e.target.value.toLowerCase(); drawTable(); } });
+document.addEventListener('click', e => { if (e.target.id === 'allon') { for (const f of rows()) S.excluded.delete(keyOf(f)); persist(); drawTable(); } });
+
+function rows(){
+  let r = S.sel === 'ALL' ? S.all : (S.findings[S.sel] || []);
+  if (S.catFilter) r = r.filter(f => f.category === S.catFilter);
+  if (S.text) r = r.filter(f => [f.host, f.user, f.process, f.category, ...(f.evidence||[])].join(' ').toLowerCase().includes(S.text));
+  const {k, d} = S.sort;
+  return [...r].sort((a, b) => (a[k] > b[k] ? 1 : a[k] < b[k] ? -1 : 0) * d);
+}
+function drawTable(){
+  const el = $('#tbl'); if (!el) return;
+  const r = rows();
+  $('#shown').textContent = `${r.length} shown`;
+  if (!r.length) { el.innerHTML = `<div class="empty">No findings ${S.text || S.catFilter ? 'match the filter' : 'with these settings'}.</div>`; return; }
+  const th = (k, t) => `<th data-k="${k}">${t}${S.sort.k===k ? (S.sort.d>0?' ▲':' ▼') : ''}</th>`;
+  el.innerHTML = `<table><tr><th title="Include in export">✓</th>${th('timestamp','Time (UTC)')}${th('category','Category')}${th('host','Host')}${th('user','User')}${th('process','Process')}${S.sel==='ALL'?th('hunt','Hunt'):''}<th>Evidence</th></tr>` +
+    r.slice(0, 1500).map(f => { const k = keyOf(f), off = S.excluded.has(k);
+      return `<tr class="f ${off?'off':''} ${S.picked===k?'sel':''}" data-k="${esc(k)}"><td><input type="checkbox" ${off?'':'checked'} data-x="${esc(k)}"></td>
+        <td class="mono">${esc(f.timestamp.replace('T',' ').slice(0,19))}</td><td>${chip(f.category)}</td><td class="mono">${esc(f.host)}</td><td class="mono">${esc(f.user)}</td>
+        <td class="mono">${esc(f.process)}</td>${S.sel==='ALL'?`<td class="mono">${esc(f.hunt)}</td>`:''}<td class="ev">${esc((f.evidence||[]).join(' · '))}</td></tr>`; }).join('') + `</table>`;
+}
+document.addEventListener('click', e => {
+  const th = e.target.closest('th[data-k]'); if (th) { const k = th.dataset.k; S.sort = {k, d: S.sort.k===k ? -S.sort.d : 1}; drawTable(); return; }
+  const cb = e.target.closest('input[data-x]'); if (cb) { cb.checked ? S.excluded.delete(cb.dataset.x) : S.excluded.add(cb.dataset.x); persist(); drawTable(); return; }
+  const tr = e.target.closest('tr.f'); if (tr) { S.picked = tr.dataset.k; drawTable(); triage(rows().find(f => keyOf(f) === tr.dataset.k)); }
+});
+function persist(){ safeSet('excluded', JSON.stringify([...S.excluded])); $('#total').textContent = `${S.all.filter(f=>!S.excluded.has(keyOf(f))).length} findings to export`; }
+
+async function run(reset){
+  const h = currentHunt(); const params = {};
+  if (!reset) for (const el of document.querySelectorAll('#form [data-k]')) {
+    const p = h.params[el.dataset.k];
+    params[el.dataset.k] = p.type === 'list' ? el.value.split(',').map(s => s.trim()).filter(Boolean) : p.type === 'str' ? el.value : Number(el.value);
+  }
+  const before = (S.findings[h.id] || []).length;
+  $('#run').disabled = $('#reset').disabled = true; $('#runmeta').innerHTML = '<span class="spin"></span> running…'; $('#err').textContent = '';
+  try {
+    const j = await api(reset ? '/api/reset' : '/api/run', {hunt: h.id, params});
+    S.findings[h.id] = j.findings;
+    const diff = j.findings.length - before;
+    await loadHunts(); drawMain();
+    setTimeout(() => { const d = $('#diff'); if (d) d.innerHTML = diff ? `<span class="${diff>0?'plus':'minus'}">${diff>0?'+':''}${diff} findings vs. previous run</span>` : 'same count as previous run'; }, 50);
+  } catch (err) { $('#err').textContent = 'Run failed: ' + err.message; $('#run').disabled = $('#reset').disabled = false; $('#runmeta').textContent = ''; }
+}
+
+async function triage(f){
+  if (!f) return;
+  const side = $('#side'); side.classList.add('open');
+  side.innerHTML = `<button class="x" onclick="document.getElementById('side').classList.remove('open')">✕</button><div class="meta">Triage</div><h2 style="margin:2px 0 6px;font-size:17px">${esc(f.host)}</h2>${chip(f.category)} <span class="meta">${esc(f.timestamp)}</span><div class="empty"><span class="spin"></span></div>`;
+  const c = await api(`/api/context?host=${encodeURIComponent(f.host)}&ts=${encodeURIComponent(f.timestamp)}`);
+  const t0 = Date.parse(f.timestamp);
+  const owner = c.owners[0];
+  side.innerHTML = `<button class="x" onclick="document.getElementById('side').classList.remove('open')">✕</button>
+    <div class="meta">Triage · ${esc(f.hunt)}</div><h2 style="margin:2px 0 6px;font-size:17px">${esc(f.host)}</h2>${chip(f.category)}
+    <div class="kv" style="margin-top:10px">
+      <div>Time</div><div class="mono">${esc(f.timestamp)}</div><div>User</div><div class="mono">${esc(f.user)}</div>
+      <div>Process</div><div class="mono">${esc(f.process)}</div><div>Confidence</div><div>${esc(f.confidence||'high')}</div>
+      <div>Asset</div><div>${c.asset ? `${esc(c.asset.type)} · ${esc(c.asset.team)} · ${esc(c.asset.ip)}` : '—'}</div>
+      <div>Owner</div><div>${owner ? `${esc(owner.user)} · ${esc(owner.department)} · ${esc(owner.role)}${owner.status!=='active'?' · '+esc(owner.status):''}` : 'shared / lab machine'}</div>
+    </div>
+    <h3>Why it was flagged</h3><div>${(f.evidence||[]).map(esc).join('<br>')}</div>
+    <h3>What to do</h3><div class="guide">${esc(S.triage[f.category]||'')}</div>
+    <h3>All findings on this host (${c.findings.length})</h3>
+    <div class="tl">${c.findings.map(x => `<div class="${keyOf(x)===keyOf(f)?'hit':''}"><span>${x.timestamp.slice(5,16).replace('T',' ')}</span><span>${esc(x.hunt)}</span><span>${esc(x.category)} · ${esc(x.process)}</span></div>`).join('')}</div>
+    <h3>Host activity ±30 min (${c.events.length} events${c.hidden_background ? `, ${c.hidden_background} background agent events hidden` : ''})</h3>
+    <div class="tl">${c.events.map(e => { const near = Math.abs(Date.parse(e.ts) - t0) < 3000;
+      return `<div class="${near?'hit':''}"><span>${e.ts.slice(11,19)}</span><span>${esc(e.event)}</span><span>${esc(e.process!=='-'?e.process:'')} <span class="ev">${esc(e.user!=='-'?e.user+' ':'')}${esc(e.target)}</span></span></div>`; }).join('') || '<div>none</div>'}</div>
+    ${c.usb.length ? `<h3>USB activity</h3><div class="tl">${c.usb.map(u => `<div><span>${u.ts.slice(5,16).replace('T',' ')}</span><span>${esc(u.action)}</span><span>${esc(u.device)} ${u.mb?u.mb+' MB':''} · ${esc(u.user)}</span></div>`).join('')}</div>` : ''}`;
+}
+
+$('#export').onclick = async () => {
+  const r = await fetch('/api/export', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({team_id: $('#team').value, excluded:[...S.excluded]})});
+  const blob = await r.blob(); const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'findings.json'; a.click(); URL.revokeObjectURL(a.href);
+};
+$('#team').value = safeGet('team') || '12';
+$('#team').addEventListener('input', e => safeSet('team', e.target.value));
+
+(async function poll(){ let more = true; try { more = await loadHunts(); } catch (e) { $('#status').textContent = 'server not reachable'; } if (more) setTimeout(poll, 4000); })();
+</script>
+</body>
+</html>
